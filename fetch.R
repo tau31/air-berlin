@@ -2,8 +2,7 @@ library(httr2)
 library(data.table)
 library(ggplot2)
 
-my_key <- readLines(".api_key")
-
+my_key <- Sys.getenv("OPEN_WEATHER_API_KEY")
 berlin_loc <- request("http://api.openweathermap.org/geo/1.0/direct?") |>
   req_url_query(q = "Berlin,,DE", appid = my_key) |>
   req_perform() |>
@@ -18,7 +17,7 @@ air_data_resp <- request("http://api.openweathermap.org/data/2.5/air_pollution/h
     lat = berlin_loc$lat,
     lon = berlin_loc$lon,
     start = as.numeric(as.POSIXct("2020-01-01 0:00:00 CET")),
-    end = as.numeric(as.POSIXct("2025-03-01 0:00:00 CET")),
+    end = as.numeric(as.POSIXct("2025-01-01 0:00:00 CET")),
     appid = my_key
   ) |>
   req_perform() |>
@@ -45,5 +44,17 @@ air_pm[, `:=`(
   month_day_time = format(time, "%m-%d %H"),
   hour = format(time, "%H")
 )]
+
+# Add WHO recommendation
+# https://www.who.int/publications/i/item/9789240034228
+
+rec <- data.table(
+  qualitative = c("Good", "Good", "Fair", "Fair", "Moderate", "Moderate", "Poor_or_Very_Poor"),
+  who_guideline = c("meets_guideline", "2_times_higher", "3_times_higher", "5_times_higher", "7_times_higher", "10_times_higher", "over_10_times_higher"),
+  min = c(0, 5, 10, 15, 25, 35, 50),
+  max = c(5, 10, 15, 25, 35, 50, Inf)
+)
+
+air_pm[rec, `:=`(qualitative = i.qualitative, who_guideline = i.who_guideline), on = .(value >= min, value < max)]
 
 saveRDS(air_pm, "data/air_pm.rds")
