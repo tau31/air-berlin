@@ -1,13 +1,9 @@
-## Air Quality and Fireworks in Berlin Viz
+## Air Quality in Berlin
 
-Repo with code to extract and process data to visualize air quality metrics and how these
-are impacted during new years eve fireworks. 
+Following the report form IQAir, stating that ["only 7 countries world wide meet WHO dirty air guidelines"](https://www.theguardian.com/environment/2025/mar/11/only-seven-countries-worldwide-meet-who-dirty-air-guidelines-study-shows),
+I wanted to analyze these metrics for the city of Berlin. 
 
-### PLAN:
-- import data via wrapper around openweather api 
-- viz using ggplot2
+Data fetched from the OpenWeather API, namely the [Air Pollution API](Air Pollution API). 
 
-Well, the data does not show any apparent effect of fireworks on air quality. 
-Maybe with more granular data, it would show more sensitivity? 
+In progress. 
 
-Good to learn how to interface with openweather api !
