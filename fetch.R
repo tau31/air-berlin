@@ -10,12 +10,11 @@ berlin_loc <- request("http://api.openweathermap.org/geo/1.0/direct?") |>
   as.data.frame() |>
   dplyr::select(lat, lon)
 
-
 air_data_resp <- request("http://api.openweathermap.org/data/2.5/air_pollution/history") |>
   req_url_query(
     lat = berlin_loc$lat,
     lon = berlin_loc$lon,
-    start = as.numeric(as.POSIXct("2020-01-01 0:00:00 CET")),
+    start = as.numeric(as.POSIXct("2021-01-01 1:00:00 CET")),
     end = as.numeric(as.POSIXct("2025-01-01 0:00:00 CET")),
     appid = my_key
   ) |>
@@ -39,15 +38,22 @@ air_dt <- air_dt[value > 0, ]
 air_pm <- air_dt[variable == "pm2_5"]
 
 air_pm[, `:=`(
-  year = format(time, "%Y"),
+  year = year(time),
+  date = as.Date(time),
+  year_month = format(time, "%Y-%m"),
+  month = month(time),
+  week = week(time),
+  weekday = wday(time),
+  year_day = yday(time),
+  month_time = format(time, "%m %H"),
   month_day_time = format(time, "%m-%d %H"),
-  hour = format(time, "%H")
+  hour = hour(time)
 )]
 
 # Add WHO recommendation
 # https://www.who.int/publications/i/item/9789240034228
 
-openWeather_guide <- c("Good", "Fair", "Moderate", "Poor_or_Very_Poor")
+openWeather_guideline <- c("Good", "Fair", "Moderate", "Poor_or_Very_Poor")
 who_guideline <- c("meets_guideline", "2_times_higher", "3_times_higher", "5_times_higher", "7_times_higher", "10_times_higher", "over_10_times_higher")
 
 
