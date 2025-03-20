@@ -12,38 +12,8 @@ library(data.table)
 #     10 µg/m3 annual mean, 25 µg/m3 24-hour mean.
 
 air_pm <- readRDS("data/air_pm.rds")
-air_pm[, year := year(time)]
-
-daily <- air_pm[, .(year = year(date), mean = mean(value), sd = sd(value)), by = date]
-
-ggplot(daily, aes(x = date, y = mean)) +
-  geom_path() +
-  facet_wrap(~year, ncol = 1, scales = "free_x")
-
-ggplot(daily, aes(x = mean)) +
-  geom_histogram() +
-  facet_wrap(~year, ncol = 1) +
-  geom_vline(xintercept = 5.39)
-
-# average over year
-
-year <- air_pm[, .(mean = mean(value)), year]
-
-# average over month
-
-year_month <- air_pm[, .(mean = mean(value)), by = .(year, month)]
-month <- air_pm[, .(mean = mean(value)), by = month]
-
-# extreme low-quality days
 day <- air_pm[, .(year = year(date), mean = mean(value), sd = sd(value)), by = date]
 
-# fluctuation over the day
-
-# worst streaks over time
-# (consecutive days in which the quality of the air was very poor (unhealthy))
-
-# seasonality
-# add all dates
 dates <- data.table(date = seq(as.Date("2021-01-01"), as.Date("2024-12-31"), by = "day"))
 day <- merge(day, dates, all.y = TRUE)
 
