@@ -59,7 +59,7 @@ day[, `:=`(
 # build x label ticks
 x_labels <- day[, .(min_week = min(week)), by = month]
 
-ggplot(day, aes(week, wday, fill = exceeds)) +
+tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
   geom_tile(color = "#f5f2f2", linejoin = "bevel", linewidth = .3) + # "#dbdbdb"
   facet_wrap(
     ~year,
@@ -101,3 +101,5 @@ ggplot(day, aes(week, wday, fill = exceeds)) +
     x = "",
     y = ""
   )
+
+ggsave(tile_plot, device = "png", filename = "tile_plot.png")
