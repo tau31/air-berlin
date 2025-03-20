@@ -50,11 +50,13 @@ day <- merge(day, dates, all.y = TRUE)
 day[, `:=`(
   year = lubridate::year(date),
   wday = lubridate::wday(date, label = TRUE, abbr = TRUE, week_start = 1),
-  week = lubridate::week(date),
   month = lubridate::month(date, label = TRUE, abbr = TRUE),
+  yday = lubridate::yday(date),
   exceeds = mean / 15 # daily recommended concentration
 )]
 
+# Week number starting at first day until Sunday
+day[, week := ifelse(wday == "Mon" | yday == 1, 1, 0)][, week := cumsum(week), by = year]
 
 # build x label ticks
 x_labels <- day[, .(min_week = min(week)), by = month]
@@ -102,4 +104,4 @@ tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
     y = ""
   )
 
-ggsave(tile_plot, device = "png", filename = "tile_plot.png")
+ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png")
