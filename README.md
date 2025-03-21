@@ -5,5 +5,4 @@ I wanted to analyze these metrics for the city of Berlin, particularly the conce
 
 Data is fetched from the OpenWeather API: [Air Pollution API](https://openweathermap.org/api/air-pollution). 
 
-In progress. 
-
+![](plots/tile_plot.png)
