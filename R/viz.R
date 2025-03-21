@@ -1,5 +1,9 @@
 library(ggplot2)
 library(data.table)
+library(extrafont)
+library(ggtext)
+# font_import()
+# font_import(pattern = 'Roboto')
 
 # https://www.c40knowledgehub.org/s/article/WHO-Air-Quality-Guidelines?language=en_US
 # The WHO air quality guideline (AQG) states that annual average concentrations of PM2.5 should not exceed 5 µg/m3, while 24-hour average exposures should not exceed 15 µg/m3 more than 3 - 4 days per year.
@@ -32,7 +36,7 @@ day[, week := ifelse(wday == "Mon" | yday == 1, 1, 0)][, week := cumsum(week), b
 x_labels <- day[, .(min_week = min(week)), by = month]
 
 tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
-  geom_tile(color = "#f5f2f2", linejoin = "bevel", linewidth = .3) + # "#dbdbdb"
+  geom_tile(color = "#f5f2f2", linejoin = "bevel", linewidth = .1) + # "#dbdbdb"
   facet_wrap(
     ~year,
     ncol = 1,
@@ -51,10 +55,17 @@ tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
   scale_fill_viridis_b(
     direction = 1,
     option = "plasma",
-    na.value = "grey88",
-    guide = guide_bins(
-      title = "PM2.5 concentration exceeds x times guideline",
+    na.value = NA,
+    guide = guide_legend(
+      title = "How many times the PM<sub>2.5</sub> concentration exceeds the Air Quality Guideline (AQG)",
       position = "bottom"
+    ),
+    labels = c(
+      "Meets AQG",
+      "Exceeds 1-2 times",
+      "Exceeds 2-3 times",
+      "Exceeds 3-5 times",
+      "Exceeds more than 5 times"
     )
   ) +
   theme_minimal() +
@@ -62,16 +73,23 @@ tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
     panel.grid = element_blank(),
     legend.position = "bottom",
     legend.title.position = "top",
-    legend.key.width = unit(4, "cm"),
-    legend.key.height = unit(.5, "cm"),
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 14),
-    axis.text = element_text(size = 14),
-    strip.text = element_text(size = 14)
+    legend.key.width = unit(1, "cm"),
+    legend.key.height = unit(1, "cm"),
+    legend.text = element_text(
+      size = 12
+    ),
+    legend.title = element_markdown(size = 14),
+    axis.text = element_text(size = 13),
+    strip.text = element_text(size = 14),
+    text = element_text(family = "Lato"),
+    plot.title = element_markdown(size = 20, face = "bold"),
+    plot.subtitle = element_markdown(size = 14)
   ) +
   labs(
+    title = "Berlin: Daily Average concentration of PM<sub>2.5</sub> compared to WHO Guidelines",
+    subtitle = "WHO Recommendation: Average daily PM<sub>2.5</sub> concentration below 15 (μ/m<sup>3</sup>)",
     x = "",
     y = ""
   )
 
-ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png")
+ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png", height = 7, width = 14, bg = "white")
