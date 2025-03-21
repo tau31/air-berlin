@@ -18,16 +18,15 @@ library(ggtext)
 air_pm <- readRDS("data/air_pm.rds")
 day <- air_pm[, .(year = year(date), mean = mean(value), sd = sd(value)), by = date]
 
-dates <- data.table(date = seq(as.Date("2021-01-01"), as.Date("2024-12-31"), by = "day"))
-day <- merge(day, dates, all.y = TRUE)
-
 day[, `:=`(
   year = lubridate::year(date),
   wday = lubridate::wday(date, label = TRUE, abbr = TRUE, week_start = 1),
   month = lubridate::month(date, label = TRUE, abbr = TRUE),
   yday = lubridate::yday(date),
   exceeds = mean / 15 # daily recommended concentration
-)]
+)][
+  , exceeds := round(exceeds)
+]
 
 # Week number starting at first day until Sunday
 day[, week := ifelse(wday == "Mon" | yday == 1, 1, 0)][, week := cumsum(week), by = year]
@@ -35,7 +34,7 @@ day[, week := ifelse(wday == "Mon" | yday == 1, 1, 0)][, week := cumsum(week), b
 # build x label ticks
 x_labels <- day[, .(min_week = min(week)), by = month]
 
-tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
+tile_plot <- ggplot(day, aes(week, wday, fill = factor(exceeds))) +
   geom_tile(color = "#f5f2f2", linejoin = "bevel", linewidth = .1) + # "#dbdbdb"
   facet_wrap(
     ~year,
@@ -52,20 +51,23 @@ tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
     breaks = c("Mon", "Wed", "Fri"),
     lim = rev
   ) +
-  scale_fill_viridis_b(
+  scale_fill_viridis_d(
     direction = 1,
     option = "plasma",
     na.value = NA,
     guide = guide_legend(
       title = "How many times the PM<sub>2.5</sub> concentration exceeds the Air Quality Guideline (AQG)",
-      position = "bottom"
+      position = "bottom",
+      nrow = 1
     ),
     labels = c(
       "Meets AQG",
       "Exceeds 1-2 times",
       "Exceeds 2-3 times",
-      "Exceeds 3-5 times",
-      "Exceeds more than 5 times"
+      "Exceeds 3-4 times",
+      "Exceeds 4-5 times",
+      "Exceeds more than 5 times",
+      "Not Enough Data"
     )
   ) +
   theme_minimal() +
@@ -86,10 +88,10 @@ tile_plot <- ggplot(day, aes(week, wday, fill = exceeds)) +
     plot.subtitle = element_markdown(size = 14)
   ) +
   labs(
-    title = "Berlin: Daily Average concentration of PM<sub>2.5</sub> compared to WHO Guidelines",
-    subtitle = "WHO Recommendation: Average daily PM<sub>2.5</sub> concentration below 15 (μ/m<sup>3</sup>)",
+    title = "Berlin 🇩🇪: Daily Average concentration of PM<sub>2.5</sub> compared to WHO Guidelines",
+    subtitle = "WHO Air Quality Guideline: Average daily PM<sub>2.5</sub> concentration **below 15 (μ/m<sup>3</sup>**)",
     x = "",
     y = ""
   )
 
-ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png", height = 7, width = 14, bg = "white")
+ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png", height = 7, width = 13, bg = "white")
