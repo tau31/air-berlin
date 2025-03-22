@@ -31,43 +31,60 @@ day[, `:=`(
 # Week number starting at first day until Sunday
 day[, week := ifelse(wday == "Mon" | yday == 1, 1, 0)][, week := cumsum(week), by = year]
 
-# build x label ticks
-x_labels <- day[, .(min_week = min(week)), by = month]
+## Consecutive streaks of bad air (at least 3 days consecutive with bad air)
+# get bad days only (days where the average is at least 3 times above the guideline)
+bad_days <- day[, is_bad := exceeds >= 2][(is_bad), ]
+# get consecutive days
+# code from https://stackoverflow.com/questions/5222061/create-grouping-variable-for-consecutive-sequences-and-split-vector
 
-tile_plot <- ggplot(day, aes(week, wday, fill = factor(exceeds))) +
-  geom_tile(color = "#f5f2f2", linejoin = "bevel", linewidth = .1) + # "#dbdbdb"
-  facet_wrap(
-    ~year,
-    ncol = 1,
-    strip.position = "right"
-  ) +
-  scale_x_continuous(
-    breaks = x_labels$min_week,
-    labels = x_labels$month,
-    position = "bottom",
-    expand = c(0, 0)
-  ) +
-  scale_y_discrete(
-    breaks = c("Mon", "Wed", "Fri"),
-    lim = rev
-  ) +
+setorder(bad_days, date)
+bad_days[, consecutive := cumsum(c(TRUE, diff(date) != 1))]
+
+# Summarize for plotting
+# severity is the the average of of how many times the gzuideline is exceeds for a particular streak of days
+bad_days <- bad_days[, .(
+  date,
+  year,
+  exceeds = factor(exceeds),
+  n_days = .N,
+  day_sequence = as.character(seq_len(.N)),
+  severity = sum(exceeds) / .N,
+  start = min(date),
+  label = sprintf("%s to %s", min(date), max(date))
+),
+by = consecutive
+][n_days > 2]
+
+setorder(bad_days, start, date)
+
+# plotting
+
+ggplot(bad_days, aes(x = day_sequence, y = factor(start), fill = exceeds)) +
+  geom_tile(color = "#f5f2f2", linejoin = "bevel", linewidth = .1) +
+  coord_equal() +
+  # facet_wrap(~year, ncol = 1)+
+  # coord_fixed()
   scale_fill_viridis_d(
-    direction = 1,
     option = "plasma",
+    begin = 2 / 6,
+    direction = 1,
     na.value = NA,
     guide = guide_legend(
       title = "How many times the PM<sub>2.5</sub> concentration exceeds the Air Quality Guideline (AQG)",
       position = "bottom",
       nrow = 1
     ),
+    # limits = c(2,3,4,5),
     labels = c(
-      "Meets AQG",
-      "Exceeds 1-2 times",
       "Exceeds 2-3 times",
       "Exceeds 3-4 times",
       "Exceeds 4-5 times",
       "Exceeds more than 5 times"
     )
+  ) +
+  scale_y_discrete(
+    labels = rev(bad_days[, unique(label)]),
+    lim = rev
   ) +
   theme_minimal() +
   theme(
@@ -80,17 +97,16 @@ tile_plot <- ggplot(day, aes(week, wday, fill = factor(exceeds))) +
       size = 12
     ),
     legend.title = element_markdown(size = 14),
-    axis.text = element_text(size = 13),
+    axis.text = element_text(size = 14),
+    axis.title.x = element_text(size = 14),
     strip.text = element_text(size = 14),
     text = element_text(family = "Lato"),
-    plot.title = element_markdown(size = 20, face = "bold"),
-    plot.subtitle = element_markdown(size = 14)
+    plot.title = element_markdown(hjust = .5, size = 20, face = "bold"),
+    plot.subtitle = element_markdown(hjust = .5, size = 14)
   ) +
   labs(
-    title = "Berlin 🇩🇪: Daily Average concentration of PM<sub>2.5</sub> compared to WHO Guidelines",
-    subtitle = "WHO Air Quality Guideline: Average daily PM<sub>2.5</sub> concentration **below 15 (μ/m<sup>3</sup>**)",
-    x = "",
+    title = "Series of at least 3 consecutive days with PM<sub>2.5</sub> at least 2 times above recommended level (daily average below 15 (μ/m<sup>3</sup>))",
+    subtitle = "Series of more than 2 days in a row. ",
+    x = "Days in a row",
     y = ""
   )
-
-ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png", height = 7, width = 13, bg = "white")
