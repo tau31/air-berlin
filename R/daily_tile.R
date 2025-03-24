@@ -92,7 +92,7 @@ tile_plot <- ggplot(day, aes(week, wday, fill = factor(exceeds))) +
     subtitle = "WHO Air Quality Guideline: Average daily PM<sub>2.5</sub> concentration **below 15 (μ/m<sup>3</sup>**)",
     x = "",
     y = "",
-    caption = "Data from the OpenWeather Air Pollution API (openweathermap.org/api/air-pollution)<br>By Tiago Cabaço (github.com/tau31)"
+    caption = "Data from the OpenWeather Air Pollution API (openweathermap.org/api/air-pollution)<br>By Tiago Cabaço (github.com/tau31/air-berlin)"
   )
 
 ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png", height = 7, width = 13, bg = "white")
