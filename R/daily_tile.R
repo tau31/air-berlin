@@ -84,13 +84,15 @@ tile_plot <- ggplot(day, aes(week, wday, fill = factor(exceeds))) +
     strip.text = element_text(size = 14),
     text = element_text(family = "Lato"),
     plot.title = element_markdown(size = 20, face = "bold"),
-    plot.subtitle = element_markdown(size = 14)
+    plot.subtitle = element_markdown(size = 14),
+    plot.caption = element_markdown(face = "italic", size = 12)
   ) +
   labs(
     title = "Berlin 🇩🇪: Daily Average concentration of PM<sub>2.5</sub> compared to WHO Guidelines",
     subtitle = "WHO Air Quality Guideline: Average daily PM<sub>2.5</sub> concentration **below 15 (μ/m<sup>3</sup>**)",
     x = "",
-    y = ""
+    y = "",
+    caption = "Data from the OpenWeather Air Pollution API (openweathermap.org/api/air-pollution)<br>By Tiago Cabaço (github.com/tau31)"
   )
 
 ggsave(tile_plot, device = "png", filename = "plots/tile_plot.png", height = 7, width = 13, bg = "white")
